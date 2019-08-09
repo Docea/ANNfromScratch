@@ -8,7 +8,7 @@ Created on Fri Aug  9 19:14:43 2019
 import numpy as np
 
 class Network:
-    def __init__(self, nIn, nHid, nOut,activationFunc):
+    def __init__(self, nIn, nHid, nOut,activationFunc=str(),learningRate):
         self.activationFunc=activationFunc
         
         self.FirstWeights = np.random.rand(nHid,nIn)
@@ -17,23 +17,37 @@ class Network:
         self.FirstBiases = np.random.rand(nHid,1)
         self.SecondBiases = np.random.rand(nOut,1)
         
+        self.learningRate = learningRate
         #self.Output = np.zeros(nOut,1)
         
         
     def ForwardPass(self,Input):
-        Hidden=np.dot(self.FirstWeights,Input)+self.FirstBiases
-        Hidden=self.ActivationFunc(Hidden)
-        self.Output=np.dot(Hidden,self.SecondWeights)+self.SecondBiases
-        #self.Output=self.ActivationFunc(self.Output)
+        self.netHidden=np.dot(self.FirstWeights,Input)+self.FirstBiases
+        self.Hidden=self.Activation(self.netHidden)
+        self.netOutput=np.dot(Hidden,self.SecondWeights)+self.SecondBiases
+        self.Output=self.Activation(self.netOutput)
     
     def ComputeError(self,Label):
-        self.Error=np.sum((self.Output-Label)^2)
-        
-    def ActivationFunc(self,Layer):
-        if self.activationFunc == 'Sigmoid'
+        self.Error=np.sum((self.Output-Label)**2)
+     
+           
+    def Activation(self,Layer):
+        if self.activationFunc=='Sigmoid':
             return 1/(1+np.exp(-Layer))
         
+    def Backprop(self,Label):
+        dErr_dOut=(self.Output-Label)
+        dOut_dNet2=np.exp(self.netOutput)+2+np.exp(-self.netOutput)
+        dNet2_dW2=self.Hidden
         
+        Weight2Gradients=np.dot(np.dot(np.transpose(dErr_dOut),dOut_dNet2),np.transpose(dNet2_dW2))
+
+        
+        
+    
+        
+        
+    
         
     
         
