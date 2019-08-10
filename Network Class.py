@@ -22,6 +22,7 @@ class Network:
         
         
     def ForwardPass(self,Input):
+        self.Input=Input
         self.netHidden=np.dot(self.FirstWeights,Input)+self.FirstBiases
         self.Hidden=self.Activation(self.netHidden)
         self.netOutput=np.dot(Hidden,self.SecondWeights)+self.SecondBiases
@@ -37,12 +38,18 @@ class Network:
         
     def Backprop(self,Label):
         dErr_dOut=(self.Output-Label)
-        dOut_dNet2=np.exp(self.netOutput)+2+np.exp(-self.netOutput)
+        if self.activationFunc=='Sigmoid':
+            dOut_dNet2=np.exp(self.netOutput)+2+np.exp(-self.netOutput)
         dNet2_dW2=self.Hidden
         
-        Weight2Gradients=np.dot(np.dot(np.transpose(dErr_dOut),dOut_dNet2),np.transpose(dNet2_dW2))
-
+        Weight2Gradients=np.dot(np.multiply(dErr_dOut,dOut_dNet2),np.transpose(dNet2_dW2))
         
+        dNet2_dHidden=self.SecondWeights
+        if self.activationFunc=='Sigmoid':
+            dHidden_dNet1=np.exp(self.netHidden)+2+np.exp(-self.netHidden)
+        dNet1_dW1=self.Input
+        
+        Weight1Gradients=np.dot()
         
     
         
