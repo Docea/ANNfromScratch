@@ -49,7 +49,9 @@ class Network:
             dHidden_dNet1=np.exp(self.netHidden)+2+np.exp(-self.netHidden)
         dNet1_dW1=self.Input
         
-        Weight1Gradients=np.dot()
+        Weight1Gradients=np.dot(np.multiply(np.transpose(np.dot(np.transpose(np.multiply(dErr_dOut,dOut_dNet2)),self.SecondWeights)),self.Hidden),np.transpose(self.Input))
+        
+        return Weight2Gradients, Weight2Gradients
         
     
         
