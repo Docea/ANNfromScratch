@@ -11,7 +11,7 @@ Created on Sat Aug 10 12:30:20 2019
 import NetworkClass as net
 import numpy as np
 
-Net = net.Network(2,3,2,'Sigmoid',0.01)
+Net = net.Network(2,3,2,'Sigmoid',0.1)
 
 Input = np.random.rand(2,1)
 Label = np.array([[1],[0]])
@@ -29,3 +29,16 @@ Error = Net.Error
 Output = Net.Output
 WeightGrads1 = Net.Weight1Gradients
 WeightGrads2 = Net.Weight2Gradients
+
+op = []
+
+for i in range(1000):
+    Net.ForwardPass(Input)
+    Net.ComputeError(Label)
+    Net.Backprop(Label)
+
+    Net.Update()
+    
+    newWeights = Net.FirstWeights
+    Output = Net.Output
+    

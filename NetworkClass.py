@@ -39,14 +39,14 @@ class Network:
     def Backprop(self,Label):
         dErr_dOut=(self.Output-Label)
         if self.activationFunc=='Sigmoid':
-            dOut_dNet2=self.netOutput*(1-self.netOutput)
+            dOut_dNet2=self.Output*(1-self.Output)
         dNet2_dW2=self.Hidden
         
         self.Weight2Gradients=np.dot(np.multiply(dErr_dOut,dOut_dNet2),np.transpose(dNet2_dW2))
         
         dNet2_dHidden=self.SecondWeights
         if self.activationFunc=='Sigmoid':
-            dHidden_dNet1=self.netHidden*(1-self.netHidden)
+            dHidden_dNet1=self.Hidden*(1-self.Hidden)
         dNet1_dW1=self.Input
         
         self.Weight1Gradients=np.dot(np.multiply(np.transpose(np.dot(np.transpose(np.multiply(dErr_dOut,dOut_dNet2)),self.SecondWeights)),self.Hidden),np.transpose(self.Input))
