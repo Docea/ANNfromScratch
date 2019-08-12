@@ -11,11 +11,11 @@ class Network:
     def __init__(self, nIn, nHid, nOut,activationFunc,learningRate):
         self.activationFunc=activationFunc
         
-        self.FirstWeights = np.random.rand(nHid,nIn)
-        self.SecondWeights = np.random.rand(nOut,nHid)
+        self.FirstWeights = np.random.normal(0,1,[nHid,nIn])
+        self.SecondWeights = np.random.normal(0,1,[nOut,nHid])
 
-        self.FirstBiases = np.random.rand(nHid,1)
-        self.SecondBiases = np.random.rand(nOut,1)
+        self.FirstBiases = np.random.normal(0,1,[nHid,1])
+        self.SecondBiases = np.random.normal(0,1,[nOut,1])
         
         self.learningRate = learningRate
         #self.Output = np.zeros(nOut,1)
@@ -56,6 +56,25 @@ class Network:
         self.FirstWeights=self.FirstWeights - self.learningRate*self.Weight1Gradients
         self.SecondWeights=self.SecondWeights - self.learningRate*self.Weight2Gradients
     
+    def Train(self,TrainingData,Labels,ValidationProp,Iterations):
+        nTrain=floor(len(TrainingData[:][1])*(1-ValidationProp))
+        nValidation=len(TrainingData[:][1])-nTrain
+        for i in range(Iterations):
+            for j in range(nTrain):
+                labelTrain=np.array(self.nOut,1)
+                labelTrain[Labels[j]-1]=1
+                self.ForwardPass(inputTrain)
+                self.ComputeError(labelTrain)
+                self.Backprop(labelTrain)
+            for k in range(nValidation):
+                self.ForwardPass(inputTrain)
+                
+                ### Here : check if the output is correct (highest value = prediction)
+                # Then, compute the accuracy overall
+                # Add a variable that tracks the accuracy through the iterations
+
+            
+            
         
         
     

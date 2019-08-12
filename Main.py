@@ -12,7 +12,7 @@ import NetworkClass as net
 import numpy as np
 import matplotlib.pyplot as plt
 
-"""
+
 ################ Uncomment for Extracting Data from CSVs ######################
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -30,12 +30,15 @@ inputSize = len(sampleInput)
 hiddenSize = round(inputSize*1.25)
 outputSize = 1
 learningRate=0.1
-"""
 
-Net = net.Network(3,4,3,'Sigmoid',0.1)
+#####################
 
-Input = np.array([[0],[1],[0]])
-Label = np.array([[0.2],[0.6],[0.4]])
+Net = net.Network(inputSize,hiddenSize,1,'Sigmoid',0.1)
+
+#Input = np.array([[0],[1],[0]])
+Input = (sampleInput-255/2)/255
+#Label = np.array([[0.2],[0.6],[0.4]])
+Label = sampleLabel
 Net.ForwardPass(Input)
 Net.ComputeError(Label)
 Net.Backprop(Label)
@@ -54,7 +57,7 @@ op = []
 op2 = []
 op3 = []
 
-for i in range(1000):
+for i in range(10000):
     Net.ForwardPass(Input)
     Net.ComputeError(Label)
     Net.Backprop(Label)
@@ -65,8 +68,8 @@ for i in range(1000):
     Output = Net.Output
     
     op.append(Output[0][0])
-    op2.append(Output[1][0])
-    op3.append(Output[2][0])
+    #op2.append(Output[1][0])
+    #op3.append(Output[2][0])
     
 plt.plot(op)
 plt.plot(op2)
