@@ -12,17 +12,15 @@ import NetworkClass as net
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 ################ Uncomment for Extracting Data from CSVs ######################
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
-#trainData = pd.read_csv('train.csv',',')
-#trainData = trainData.values
-#trainLabels = net.VectoriseLabels(trainData[:,0])
-#trainData = trainData[:][1:]
-#testData = pd.read_csv('test.csv',',')
-#testData = testData.values
+trainData = pd.read_csv('train.csv',',')
+trainData = trainData.values
+testData = pd.read_csv('test.csv',',')
+testData = testData.values
 
 sampleInput = trainData[0][1:]
 sampleInput = sampleInput.reshape(len(sampleInput),1)
@@ -30,7 +28,7 @@ sampleLabel = trainData[0][0]
 
 inputSize = len(sampleInput)
 hiddenSize = round(inputSize*1.25)
-outputSize = len(trainLabels)
+outputSize = 1
 learningRate=0.1
 
 #####################
@@ -59,12 +57,10 @@ op = []
 op2 = []
 op3 = []
 
-for i in range(100):
+for i in range(10000):
     Net.ForwardPass(Input)
     Net.ComputeError(Label)
     Net.Backprop(Label)
-
-    Net.Update()
     
     newWeights = Net.FirstWeights
     Output = Net.Output
@@ -77,6 +73,3 @@ plt.plot(op)
 plt.plot(op2)
 plt.plot(op3)
 plt.show()
-
-
-Net.Train(trainData,trainLabels,0.2,2)

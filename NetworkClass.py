@@ -6,6 +6,7 @@ Created on Fri Aug  9 19:14:43 2019
 """
 
 import numpy as np
+import math
 
 class Network:
     def __init__(self, nIn, nHid, nOut,activationFunc,learningRate):
@@ -22,7 +23,6 @@ class Network:
         self.SecondBiases = np.random.normal(0,1,[nOut,1])
         
         #self.Output = np.zeros(nOut,1)
-        
         
     def ForwardPass(self,Input):
         self.Input=Input
@@ -53,45 +53,59 @@ class Network:
         dNet1_dW1=self.Input
         
         self.Weight1Gradients=np.dot(np.multiply(np.transpose(np.dot(np.transpose(np.multiply(dErr_dOut,dOut_dNet2)),self.SecondWeights)),self.Hidden),np.transpose(self.Input))
-        self.Update
+        self.Update()
         
     def Update(self):
         self.FirstWeights=self.FirstWeights - self.learningRate*self.Weight1Gradients
         self.SecondWeights=self.SecondWeights - self.learningRate*self.Weight2Gradients
     
     def Train(self,TrainingData,Labels,ValidationProp,Iterations):
-        self.propCorrect = [] 
-        nTrain=floor(len(TrainingData[:][1])*(1-ValidationProp))
+        self.propCorrect = [] # proportion Correct during validation
+        nTrain=math.floor(len(TrainingData[:][1])*(1-ValidationProp))
         nValidation=len(TrainingData[:][1])-nTrain
         for i in range(Iterations):
+            nCorrect=0 # Counter for number of correct classifications
             for j in range(nTrain):
-                inputTrain=TrainingData[j][:]
-                labelTrain = Labels[:][j]
+                inputTrain=TrainingData[:,j]
+                inputTrain=inputTrain.reshape(len(inputTrain),1)
+                labelTrain = Labels[:,j]
+                labelTrain=labelTrain.reshape(len(labelTrain),1)
                 self.ForwardPass(inputTrain)
                 self.ComputeError(labelTrain)
                 self.Backprop(labelTrain)
             for k in range(nValidation):
-                inputValidation = TrainingData[nTrain+k][:] # input for validation
-                labelValidation = Labels[:][nTrain+k] # label for validation instance
-                nCorrect=0 # Counter for number of correct classifications
+                inputValidation = TrainingData[:,nTrain+k] # input for validation
+                inputValidation = inputValidation.reshape(len(inputValidation),1)
+                labelValidation = Labels[:,nTrain+k] # label for validation instance
+                labelValidation = labelValidation.reshape(len(labelValidation),1)
                 maxVal=-1 # This variable is used to determine which output is predicted: maximum value in output layer corresponds to prediction
                 self.ForwardPass(inputValidation)
                 for l in range(self.nOut):
                     if self.Output[l]>maxVal:
                         maxVal = self.Output[l]
                         maxPos = l # position of max value in output
-                    if labelTrain[l]==1:
+                    if labelValidation[l]==1:
                         corrPos = l # correct output position
                 if maxPos==corrPos:
                     nCorrect=nCorrect+1
-                self.propCorrect.append(nCorrect/nValidation)
-    
+            self.propCorrect.append(nCorrect/nValidation)
+                
                     
                 
                 ### Here : check if the output is correct (highest value = prediction)
                 # Then, compute the accuracy overall
                 # Add a variable that tracks the accuracy through the iterations
 
+def VectoriseLabels(Labels):
+    # This function takes a set of labels, where each label is a single number 
+    # (encoding position) and returns them in vector format
+    
+    nLabels = len(Labels)
+    nCategories = max(Labels)
+    newLabels = np.zeros([nCategories,nLabels])
+    Labels=Labels-1
+    newLabels[Labels,range(nLabels)]=1
+    return newLabels
             
             
         
