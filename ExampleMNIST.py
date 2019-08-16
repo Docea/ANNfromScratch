@@ -28,10 +28,10 @@ testData = testData.values
 testData = np.transpose(testData)
 
 inputSize = len(trainData[:,1])
-hiddenSize = round(inputSize*1.25)
+hiddenSize = 27
 outputSize = len(trainLabels)
 learningRate = 0.1
-nIterations = 25
+nIterations = 50
 
 #####################
 # Initialise network structure
@@ -42,7 +42,7 @@ Net = net.Network(inputSize,hiddenSize,outputSize,'Sigmoid',learningRate)
 Net.Train(trainData,trainLabels,0.2,nIterations)
 
 plt.plot(Net.propCorrect)
-plt.xlabel("Iterations")
+plt.xlabel("Training Iterations")
 plt.ylabel("Accuracy on Validation Set")
 title = "Learning Rate = {}".format(learningRate)
 plt.title(title)

@@ -60,6 +60,8 @@ class Network:
         self.SecondWeights=self.SecondWeights - self.learningRate*self.Weight2Gradients
     
     def Train(self,TrainingData,Labels,ValidationProp,Iterations):
+        self.bestFirstWeights = []
+        self.bestSecondWeights = []
         self.propCorrect = [] # proportion Correct during validation
         nTrain=math.floor(len(TrainingData[:][1])*(1-ValidationProp))
         nValidation=len(TrainingData[:][1])-nTrain
@@ -90,6 +92,9 @@ class Network:
                 if maxPos==corrPos:
                     nCorrect=nCorrect+1
             self.propCorrect.append(nCorrect/nValidation)
+            if max(self.propCorrect) == nCorrect/nValidation:
+                self.bestFirstWeights=self.FirstWeights
+                self.bestSecondWeights=self.SecondWeights
                 
                     
                 
