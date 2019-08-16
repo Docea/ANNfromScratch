@@ -64,6 +64,7 @@ class Network:
         nTrain=math.floor(len(TrainingData[:][1])*(1-ValidationProp))
         nValidation=len(TrainingData[:][1])-nTrain
         for i in range(Iterations):
+            print(i)
             nCorrect=0 # Counter for number of correct classifications
             for j in range(nTrain):
                 inputTrain=TrainingData[:,j]
