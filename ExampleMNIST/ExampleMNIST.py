@@ -6,8 +6,8 @@ Created on Sat Aug 10 12:30:20 2019
 @author: rdocea
 """
 
-#MAIN SCRIPT#
-
+import sys
+sys.path.insert(1,'../')
 import NetworkClass as net
 import numpy as np
 import matplotlib.pyplot as plt
