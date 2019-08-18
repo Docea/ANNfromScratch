@@ -34,7 +34,6 @@ class Network:
     def ComputeError(self,Label):
         self.Error=np.sum((self.Output-Label)**2)
      
-           
     def Activation(self,Layer):
         if self.activationFunc=='Sigmoid':
             return 1/(1+np.exp(-Layer))
@@ -58,7 +57,7 @@ class Network:
     def Update(self):
         self.FirstWeights=self.FirstWeights - self.learningRate*self.Weight1Gradients
         self.SecondWeights=self.SecondWeights - self.learningRate*self.Weight2Gradients
-    
+        
     def Train(self,TrainingData,Labels,ValidationProp,Iterations):
         self.bestFirstWeights = []
         self.bestSecondWeights = []
@@ -96,7 +95,7 @@ class Network:
                 self.bestFirstWeights=self.FirstWeights
                 self.bestSecondWeights=self.SecondWeights
                 
-                    
+            
                 
                 ### Here : check if the output is correct (highest value = prediction)
                 # Then, compute the accuracy overall
