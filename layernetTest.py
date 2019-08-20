@@ -7,7 +7,7 @@ Created on Sat Aug 17 23:47:37 2019
 """
 
 # Test Script for Layerwise Network
-
+import numpy as np
 import LayerwiseNetwork as layerNet
 
 Net = layerNet.LayerwiseNetwork()
@@ -21,3 +21,5 @@ Net.Activation('Sigmoid')
 Net.OutputLayer(3)
 
 Net.Compose()
+
+Net.Forwardpass(np.random.rand(10,10))
