@@ -21,9 +21,7 @@ class Network:
 
         self.FirstBiases = np.random.normal(0,1,[nHid,1])
         self.SecondBiases = np.random.normal(0,1,[nOut,1])
-        
-        #self.Output = np.zeros(nOut,1)
-        
+                
     def ForwardPass(self,Input):
         self.Input=Input
         self.netHidden=np.dot(self.FirstWeights,Input)+self.FirstBiases
