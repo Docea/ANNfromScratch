@@ -119,7 +119,12 @@ class LayerwiseNetwork:
                 layerStructure.append(np.zeros(np.shape(layerStructure[2])))
                 layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
                 
-            #if layerStructure[0]==
+            if layerStructure[0]=='Maxpool':
+                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
+                
+            if layerStructure[0]=='Convolution':
+                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
+                
             
             
             self.Structure[pointer]=layerStructure
@@ -192,7 +197,17 @@ class LayerwiseNetwork:
                 self.Structure[pointer][-2]=np.dot(Recast(self.Structure[pointer-1][1]),np.transpose(self.Structure[pointer+1][-1])) # Calculates the derivatives for the weights 
                 self.Structure[pointer][-1]=np.dot(self.Structure[pointer][2],self.Structure[pointer+1][-1])
                 
-            
+            if self.Structure[pointer][0]=='Maxpool':
+                nRows=len(self.Structure[pointer-1][1][:])
+                nCols=len(self.Structure[pointer-1][1][1][:])
+                filterSize=len(self.Structure[pointer][2])
+                
+                for i in range(math.floor(nRows/filterSize)):
+                    for j in range(math.floor(nCols/filterSize)):
+                        localMax=np.max(self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize])
+                        # The below line looks complicated, but it is 3 copies of the same term (almost). It sets all but the maximum value currently under the maxpool filter window to 0
+                        self.Structure[pointer][-1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize]  =  (self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize])  *  (self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize]==localMax)
+                        
             pointer -= 1
                 
         ##### Before: add biases to Compose() and Forwardpass()
