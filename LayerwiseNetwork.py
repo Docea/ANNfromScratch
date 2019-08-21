@@ -116,7 +116,7 @@ class LayerwiseNetwork:
                 layerStructure.append(np.zeros(np.shape(layerStructure[1])))
                 
             if layerStructure[0]=='Dense':
-                layerStructure.append(np.zeros(np.shape(layerStructure[1])))
+                layerStructure.append(np.zeros(np.shape(layerStructure[2])))
                 layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
                 
             #if layerStructure[0]==
@@ -181,14 +181,17 @@ class LayerwiseNetwork:
         while pointer >= 0:
             
             if self.Structure[pointer][0]=='Output':
-                self.Structure[pointer][len(self.Structure[pointer])-1]=self.Structure[pointer][1]-Label
+                self.Structure[pointer][len(self.Structure[pointer])-1]=self.Structure[pointer][1]-np.reshape(Label,np.shape(self.Structure[pointer][1]))
                 
             if self.Structure[pointer][0]=='Activation':
                 if self.Structure[pointer][2]=='Sigmoid':
                     # Calculate Schar Product between next layer's output and activation derivative
-                    self.Structure[pointer][len(self.Structure[pointer])-1]=np.multiply(np.multiply(self.Structure[pointer][1],(1-self.Structure[pointer][1])),self.Structure[pointer+1][len(self.Structure[pointer+1])-1])
+                    self.Structure[pointer][len(self.Structure[pointer])-1]=np.multiply(Recast(np.multiply(self.Structure[pointer][1],(1-self.Structure[pointer][1]))),self.Structure[pointer+1][len(self.Structure[pointer+1])-1])
                     
-            
+            if self.Structure[pointer][0]=='Dense':
+                self.Structure[pointer][-2]=np.dot(Recast(self.Structure[pointer-1][1]),np.transpose(self.Structure[pointer+1][-1])) # Calculates the derivatives for the weights 
+                self.Structure[pointer][-1]=np.dot(self.Structure[pointer][2],self.Structure[pointer+1][-1])
+                
             
             pointer -= 1
                 
@@ -196,10 +199,15 @@ class LayerwiseNetwork:
         ##### Add extra place at end of each piece in self.Structure for a placeholder for backpropagation
         
             
+def Recast(input):
+    if len(np.shape(input))==1:
+        input=np.reshape(input,[len(input),1])
+    return input
+    
             
             
                         
-                
+    
             
                 
             
