@@ -27,18 +27,12 @@ class LayerwiseNetwork:
         self.Config.append(config)        
         
             
-    def HiddenLayer(self,*argv):
-        config = ['Hidden']
+    def DenseLayer(self,*argv):
+        config = ['Dense']
         for arg in argv:
             config.append(arg)
         self.Config.append(config)
         
-        
-    def OutputLayer(self,*argv):
-        config = ['Output']
-        for arg in argv:
-            config.append(arg)
-        self.Config.append(config)
         
     def Activation(self,activationType):
         # E.g.: 'Sigma'
@@ -71,12 +65,12 @@ class LayerwiseNetwork:
                     layerStructure.append(np.zeros(outDims))
                 if self.Config[pointer][3]=='Same':
                     layerStructure.append(np.zeros(outDims))
-                layerStructure.append(np.random.rand(self.Config[pointer][1],self.Config[pointer][2]))
+                layerStructure.append(np.random.normal(0,1,[self.Config[pointer][1],self.Config[pointer][2]]))
                 self.Structure.append(layerStructure)
                 
-            if self.Config[pointer][0]=='Hidden':
+            if self.Config[pointer][0]=='Dense':
                 inDims = outDims
-                layerStructure=['Hidden']
+                layerStructure=['Dense']
                 if len(outDims)>1:
                     n = 1
                     for i in range(len(outDims)):
@@ -84,22 +78,9 @@ class LayerwiseNetwork:
                 else:
                     n = outDims
                 layerStructure.append(np.zeros([self.Config[pointer][1],1]))
-                layerStructure.append(np.random.rand(n,self.Config[pointer][1]))
+                layerStructure.append(np.random.normal(0,1,[n,self.Config[pointer][1]]))
                 outDims=[self.Config[pointer][1],1]
-                self.Structure.append(layerStructure)
-
-                
-            if self.Config[pointer][0]=='Output':
-                inDims = outDims
-                outDims = self.Config[pointer][1]
-                if isinstance(inDims, list):
-                    inDims=max(inDims)
-                if isinstance(outDims, list):
-                    outDims=max(outDims)
-                layerStructure=['Output']
-                layerStructure.append(np.zeros([self.Config[pointer][1],1]))
-                layerStructure.append(np.random.rand(inDims,outDims))
-                outDims=[self.Config[pointer][1],1]
+                layerStructure.append(np.random.normal(0,1,outDims))
                 self.Structure.append(layerStructure)
             
             if self.Config[pointer][0]=='Activation':
@@ -116,8 +97,38 @@ class LayerwiseNetwork:
                 layerStructure.append(np.zeros(outDims))
                 layerStructure.append(self.Config[pointer][1:3])
                 self.Structure.append(layerStructure)
+                
+            if pointer == (len(self.Config)-1):
+                self.Structure.append(list(self.Structure[pointer]))                
             
             pointer += 1
+        
+        self.Structure[pointer][0] = 'Output'
+        
+        pointer = len(self.Structure)-1
+        while pointer >= 0:
+            layerStructure = self.Structure[pointer]
+                
+            if layerStructure[0]=='Activation':
+                layerStructure.append(np.zeros(np.shape(layerStructure[1])))
+            
+            if layerStructure[0]=='Output':
+                layerStructure.append(np.zeros(np.shape(layerStructure[1])))
+                
+            if layerStructure[0]=='Dense':
+                layerStructure.append(np.zeros(np.shape(layerStructure[1])))
+                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
+                
+            #if layerStructure[0]==
+            
+            
+            self.Structure[pointer]=layerStructure
+            
+            pointer -= 1
+                
+            
+
+        
 
     def Forwardpass(self,Input):
         pointer = 0
@@ -147,26 +158,42 @@ class LayerwiseNetwork:
                 if self.Structure[pointer][2]=='Sigmoid':
                     self.Structure[pointer][1]=1/(1+np.exp(-self.Structure[pointer-1][1]))
                     
-            if self.Structure[pointer][0]=='Hidden':
+            if self.Structure[pointer][0]=='Dense':
                 shape = len(np.shape(self.Structure[pointer-1][1]))
                 if shape>1: #Check if flat
                     self.Structure[pointer-1][1]=np.ndarray.flatten(self.Structure[pointer-1][1])
-                self.Structure[pointer][1]=np.dot(np.transpose(self.Structure[pointer][2]),self.Structure[pointer-1][1]) # Multiply input to hidden layer by weights
+                self.Structure[pointer][1]=np.reshape(np.dot(np.transpose(self.Structure[pointer][2]),self.Structure[pointer-1][1]), np.shape(self.Structure[pointer][1])) + self.Structure[pointer][3] # Multiply input to hidden layer by weights
                     
             if self.Structure[pointer][0]=='Output':
-                self.Structure[pointer][1]=np.dot(np.transpose(self.Structure[pointer][2]),self.Structure[pointer-1][1]) # Multiply input to hidden layer by weights
-            
+                self.Structure[pointer][1]=self.Structure[pointer-1][1]
             pointer += 1
             
     def ComputeError(self,Label):
-        self.Output = self.Structure[len(self.Structure)][1]
+        self.Output = self.Structure[len(self.Structure)-1][1]
         self.Error=np.sum((self.Output-Label)**2)
         
-    def getOutput(self):
-        self.Output = self.Structure[len(self.Structure)][1]
+    def GetOutput(self):
+        self.Output = self.Structure[len(self.Structure)-1][1]
         return self.Output
         
-    #def Backpropagate(self,Output,Label):
+    def Backpropagate(self,Output,Label):
+        pointer = len(self.Structure)-1
+        while pointer >= 0:
+            
+            if self.Structure[pointer][0]=='Output':
+                self.Structure[pointer][len(self.Structure[pointer])-1]=self.Structure[pointer][1]-Label
+                
+            if self.Structure[pointer][0]=='Activation':
+                if self.Structure[pointer][2]=='Sigmoid':
+                    # Calculate Schar Product between next layer's output and activation derivative
+                    self.Structure[pointer][len(self.Structure[pointer])-1]=np.multiply(np.multiply(self.Structure[pointer][1],(1-self.Structure[pointer][1])),self.Structure[pointer+1][len(self.Structure[pointer+1])-1])
+                    
+            
+            
+            pointer -= 1
+                
+        ##### Before: add biases to Compose() and Forwardpass()
+        ##### Add extra place at end of each piece in self.Structure for a placeholder for backpropagation
         
             
             

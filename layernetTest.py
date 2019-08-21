@@ -16,10 +16,15 @@ Net.ConvolutionLayer(5,5,'Valid')
 Net.ConvolutionLayer(3,3,'Valid')   
 Net.Maxpool(2,2)
 Net.Activation('Sigmoid')
-Net.HiddenLayer(15)
+Net.DenseLayer(15)
 Net.Activation('Sigmoid')
-Net.OutputLayer(3)
+Net.DenseLayer(3)
 
 Net.Compose()
 
+b = Net.Structure
+
 Net.Forwardpass(np.random.rand(10,10))
+Net.GetOutput()
+Net.Backpropagate(Net.Output,[1,1,1])
+
