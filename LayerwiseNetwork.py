@@ -107,6 +107,7 @@ class LayerwiseNetwork:
         
         pointer = len(self.Structure)-1
         while pointer >= 0:
+            
             layerStructure = self.Structure[pointer]
                 
             if layerStructure[0]=='Activation':
@@ -122,7 +123,8 @@ class LayerwiseNetwork:
             if layerStructure[0]=='Maxpool':
                 layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
                 
-            if layerStructure[0]=='Convolution':
+            if layerStructure[0]=='Convolve':
+                layerStructure.append(np.zeros(np.shape(self.Structure[pointer][2])))
                 layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
                 
             
@@ -202,11 +204,24 @@ class LayerwiseNetwork:
                 nCols=len(self.Structure[pointer-1][1][1][:])
                 filterSize=len(self.Structure[pointer][2])
                 
+                self.Structure[pointer+1][-1]=np.reshape(self.Structure[pointer+1][-1],self.Structure[pointer][2])
+                
                 for i in range(math.floor(nRows/filterSize)):
                     for j in range(math.floor(nCols/filterSize)):
                         localMax=np.max(self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize])
                         # The below line looks complicated, but it is 3 copies of the same term (almost). It sets all but the maximum value currently under the maxpool filter window to 0
-                        self.Structure[pointer][-1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize]  =  (self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize])  *  (self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize]==localMax)
+                        self.Structure[pointer][-1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize]  =  (self.Structure[pointer+1][-1][i,j])  *  (self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize]==localMax)
+                        
+            if self.Structure[pointer][0]=='Convolve':
+                nRows=len(self.Structure[pointer-1][1][:])
+                nCols=len(self.Structure[pointer-1][1][1][:])
+                filterSize=len(self.Structure[pointer][2])
+                
+                for i in range(nRows-filterSize+1): # Change this for variable stride
+                    for j in range(nCols-filterSize+1): # Change this for variable stride
+                        self.Structure[pointer][-1][i:i+filterSize,j:j+filterSize] += self.Structure[pointer+1][-1][i,j]*self.Structure[pointer][2] # This calculates the derivative with respect to the input to the layer
+                        self.Structure[pointer][-2] += self.Structure[pointer-1][-1][i:i+filterSize,j:j+filterSize]*self.Structure[pointer+1][-1][i,j] # Calculates derivative with respect to filter weights
+
                         
             pointer -= 1
                 
