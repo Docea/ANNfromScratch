@@ -13,6 +13,7 @@ class LayerwiseNetwork:
     def __init__(self):
         self.Config=[]
         self.Structure=[]
+        self.learningRate=0.01
         
         
     def InputLayer(self,*argv):
@@ -96,6 +97,7 @@ class LayerwiseNetwork:
                 layerStructure = ['Maxpool']
                 layerStructure.append(np.zeros(outDims))
                 layerStructure.append(self.Config[pointer][1:3])
+                layerStructure.append(np.shape(layerStructure[1])) # Creates a record of the output dimensions
                 self.Structure.append(layerStructure)
                 
             if pointer == (len(self.Config)-1):
@@ -155,7 +157,7 @@ class LayerwiseNetwork:
             if self.Structure[pointer][0]=='Maxpool':
                 nRows=len(self.Structure[pointer-1][1][:])
                 nCols=len(self.Structure[pointer-1][1][1][:])
-                filterSize=len(self.Structure[pointer][2])
+                filterSize=self.Structure[pointer][2][0]
                 
                 for i in range(math.floor(nRows/filterSize)):
                     for j in range(math.floor(nCols/filterSize)):
@@ -202,9 +204,9 @@ class LayerwiseNetwork:
             if self.Structure[pointer][0]=='Maxpool':
                 nRows=len(self.Structure[pointer-1][1][:])
                 nCols=len(self.Structure[pointer-1][1][1][:])
-                filterSize=len(self.Structure[pointer][2])
+                filterSize=self.Structure[pointer][2][0]
                 
-                self.Structure[pointer+1][-1]=np.reshape(self.Structure[pointer+1][-1],self.Structure[pointer][2])
+                self.Structure[pointer+1][-1]=np.reshape(self.Structure[pointer+1][-1],self.Structure[pointer][3])
                 
                 for i in range(math.floor(nRows/filterSize)):
                     for j in range(math.floor(nCols/filterSize)):
@@ -234,15 +236,65 @@ class LayerwiseNetwork:
         while pointer < len(self.Structure):
             
             if self.Structure[pointer][0]=='Dense':
-                self.Structure[pointer][2]=self.Structure[pointer][2]-self.Structure[pointer][-2]
+                self.Structure[pointer][2]=self.Structure[pointer][2]-self.learningRate*self.Structure[pointer][-2]
                                         
             if self.Structure[pointer][0]=='Convolve':
-                self.Structure[pointer][2]=self.Structure[pointer][2]-self.Structure[pointer][-2]
+                self.Structure[pointer][2]=self.Structure[pointer][2]-self.learningRate*self.Structure[pointer][-2]
             
             pointer += 1
             
             
+    def Train(self,TrainingData,Labels,ValidationProp,Iterations,learningRate):
+        self.learningRate=learningRate
+        self.propCorrect = [] # proportion Correct during validation
+        nTrain=math.floor(len(TrainingData[:][1])*(1-ValidationProp))
+        nValidation=len(TrainingData[:][1])-nTrain
+        
+        for i in range(Iterations):
+            print(i)
+            nCorrect=0 # Counter for number of correct classifications
+            for j in range(nTrain):
+                inputTrain=TrainingData[:,j]
+                inputTrain=inputTrain.reshape(len(inputTrain),1)
+                labelTrain = Labels[:,j]
+                labelTrain=labelTrain.reshape(len(labelTrain),1)
+                self.Forwardpass(inputTrain)
+                self.ComputeError(labelTrain)
+                self.Backpropagate(labelTrain)
+            for k in range(nValidation):
+                inputValidation = TrainingData[:,nTrain+k] # input for validation
+                inputValidation = inputValidation.reshape(len(inputValidation),1)
+                labelValidation = Labels[:,nTrain+k] # label for validation instance
+                labelValidation = labelValidation.reshape(len(labelValidation),1)
+                maxVal=-1 # This variable is used to determine which output is predicted: maximum value in output layer corresponds to prediction
+                self.ForwardPass(inputValidation)
+                for l in range(self.nOut):
+                    if self.Output[l]>maxVal:
+                        maxVal = self.Output[l]
+                        maxPos = l # position of max value in output
+                    if labelValidation[l]==1:
+                        corrPos = l # correct output position
+                if maxPos==corrPos:
+                    nCorrect=nCorrect+1
+            self.propCorrect.append(nCorrect/nValidation)
+            if max(self.propCorrect) == nCorrect/nValidation:
+                self.bestFirstWeights=self.FirstWeights
+                self.bestSecondWeights=self.SecondWeights
+        
+        
+        
+def VectoriseLabels(Labels):
+    # This function takes a set of labels, where each label is a single number 
+    # (encoding position) and returns them in vector format
     
+    nLabels = len(Labels)
+    nCategories = max(Labels)
+    newLabels = np.zeros([nCategories,nLabels])
+    Labels=Labels-1
+    newLabels[Labels,range(nLabels)]=1
+    return newLabels
+
+
             
 def Recast(input):
     if len(np.shape(input))==1:
