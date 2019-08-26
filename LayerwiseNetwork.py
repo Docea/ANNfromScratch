@@ -228,6 +228,21 @@ class LayerwiseNetwork:
         ##### Before: add biases to Compose() and Forwardpass()
         ##### Add extra place at end of each piece in self.Structure for a placeholder for backpropagation
         
+        
+    def Update(self):  
+        pointer = 0
+        while pointer < len(self.Structure):
+            
+            if self.Structure[pointer][0]=='Dense':
+                self.Structure[pointer][2]=self.Structure[pointer][2]-self.Structure[pointer][-2]
+                                        
+            if self.Structure[pointer][0]=='Convolve':
+                self.Structure[pointer][2]=self.Structure[pointer][2]-self.Structure[pointer][-2]
+            
+            pointer += 1
+            
+            
+    
             
 def Recast(input):
     if len(np.shape(input))==1:

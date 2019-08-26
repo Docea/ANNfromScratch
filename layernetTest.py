@@ -27,4 +27,5 @@ b = Net.Structure
 Net.Forwardpass(np.random.rand(10,10))
 Net.GetOutput()
 Net.Backpropagate(Net.Output,[1,1,1])
+Net.Update()
 
