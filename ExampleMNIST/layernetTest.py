@@ -14,30 +14,38 @@ import numpy as np
 import LayerwiseNetwork as layerNet
 import numpy as np
 import pandas as pd
+import math
 
 
 Net = layerNet.LayerwiseNetwork()
-Net.InputLayer(100,100)
+Net.InputLayer(28,28)
 Net.ConvolutionLayer(6,6,'Valid')
 Net.ConvolutionLayer(4,4,'Valid')   
 Net.Maxpool(2,2)
 Net.Activation('Sigmoid')
-Net.DenseLayer(15)
+Net.DenseLayer(18)
 Net.Activation('Sigmoid')
-Net.DenseLayer(3)
+Net.DenseLayer(9)
 Net.Compose()
 
 
 trainData = pd.read_csv('train.csv',',')
 trainData = trainData.values
-trainLabels = net.VectoriseLabels(trainData[:,0]) # Assigns each label a separate output
+trainLabels = layerNet.VectoriseLabels(trainData[:,0]) # Assigns each label a separate output
 trainData = trainData[:,1:] # Separates training data from labels
 trainData = (trainData/255)-0.5 # Mean-normalising data and rescaling data
 trainData = np.transpose(trainData)
+trainData = np.reshape(trainData,[28,28,42000])
+trainData = list(np.transpose(trainData))
 testData = pd.read_csv('test.csv',',') # Importing test data, although *CURRENTLY UNUSED*
 testData = testData.values
 testData = np.transpose(testData)
 
+
+Net.Train(trainData,trainLabels,0.2,10,0.01)
+
+
+'''
 inputSize = len(trainData[:,1]) # Determines the size of the input layer to the neural network
 hiddenSize = 27 # Sets the size of the hidden layer (hidden layer size << input layer size)
 outputSize = len(trainLabels) # Sets output layer size in accordance with number of labers
@@ -60,3 +68,4 @@ for i in range(1000):
     
 
 
+'''

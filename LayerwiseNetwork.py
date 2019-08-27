@@ -106,6 +106,7 @@ class LayerwiseNetwork:
             pointer += 1
         
         self.Structure[pointer][0] = 'Output'
+        self.nOut = len(self.Structure[pointer][1])
         
         pointer = len(self.Structure)-1
         while pointer >= 0:
@@ -129,8 +130,6 @@ class LayerwiseNetwork:
                 layerStructure.append(np.zeros(np.shape(self.Structure[pointer][2])))
                 layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
                 
-            
-            
             self.Structure[pointer]=layerStructure
             
             pointer -= 1
@@ -226,7 +225,9 @@ class LayerwiseNetwork:
 
                         
             pointer -= 1
-                
+            
+        self.Update() # Updates weights following calculation of derivatives
+            
         ##### Before: add biases to Compose() and Forwardpass()
         ##### Add extra place at end of each piece in self.Structure for a placeholder for backpropagation
         
@@ -247,27 +248,28 @@ class LayerwiseNetwork:
     def Train(self,TrainingData,Labels,ValidationProp,Iterations,learningRate):
         self.learningRate=learningRate
         self.propCorrect = [] # proportion Correct during validation
-        nTrain=math.floor(len(TrainingData[:][1])*(1-ValidationProp))
-        nValidation=len(TrainingData[:][1])-nTrain
+        nTrain=math.floor(len(TrainingData)*(1-ValidationProp))
+        nValidation=len(TrainingData)-nTrain
         
         for i in range(Iterations):
-            print(i)
+            
             nCorrect=0 # Counter for number of correct classifications
             for j in range(nTrain):
-                inputTrain=TrainingData[:,j]
-                inputTrain=inputTrain.reshape(len(inputTrain),1)
+                print("Iteration: ", i, "Instance: ", j)
+                inputTrain=TrainingData[j]
                 labelTrain = Labels[:,j]
                 labelTrain=labelTrain.reshape(len(labelTrain),1)
                 self.Forwardpass(inputTrain)
                 self.ComputeError(labelTrain)
-                self.Backpropagate(labelTrain)
+                self.GetOutput()
+                self.Backpropagate(self.Output,labelTrain)
             for k in range(nValidation):
-                inputValidation = TrainingData[:,nTrain+k] # input for validation
-                inputValidation = inputValidation.reshape(len(inputValidation),1)
+                print("Iteration: ", i, "Instance: ", k)
+                inputValidation = TrainingData[nTrain+k] # input for validation
                 labelValidation = Labels[:,nTrain+k] # label for validation instance
                 labelValidation = labelValidation.reshape(len(labelValidation),1)
-                maxVal=-1 # This variable is used to determine which output is predicted: maximum value in output layer corresponds to prediction
-                self.ForwardPass(inputValidation)
+                maxVal=-1 # This variable is used to determine which output is predicted: maximum value in output layer corresponds to prediction (initialised at -1)
+                self.Forwardpass(inputValidation)
                 for l in range(self.nOut):
                     if self.Output[l]>maxVal:
                         maxVal = self.Output[l]
@@ -277,9 +279,8 @@ class LayerwiseNetwork:
                 if maxPos==corrPos:
                     nCorrect=nCorrect+1
             self.propCorrect.append(nCorrect/nValidation)
-            if max(self.propCorrect) == nCorrect/nValidation:
-                self.bestFirstWeights=self.FirstWeights
-                self.bestSecondWeights=self.SecondWeights
+            #if max(self.propCorrect) == nCorrect/nValidation:
+                
         
         
         
