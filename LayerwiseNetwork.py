@@ -10,125 +10,168 @@ import numpy as np
 import math
 
 class LayerwiseNetwork:
+    
     def __init__(self):
-        self.Config=[]
-        self.Structure=[]
-        self.learningRate=0.01
+        self.Config=[] # Contains configuration of the network
+        self.Structure=[] # Contains relevant structures for the network
+        self.learningRate=0.1 # Default learning rate value
         
         
-    def InputLayer(self,*argv):
+    def InputLayer(self,*argv): # Define input dimensions of the network in 'argv'
         config = ['Input']
+        dimensions = []
         for arg in argv:
-            config.append(arg)
+            config.append(arg) 
         self.Config.append(config)
                 
             
-    def ConvolutionLayer(self,dimA,dimB,padding):
-        config = ['Convolution',dimA,dimB,padding]
+    def ConvolutionLayer(self,dim,padding): # Convolutional layer with square filter for dimensions 'dim'
+        config = ['Convolution',dim,padding] 
         self.Config.append(config)        
         
             
-    def DenseLayer(self,*argv):
+    def DenseLayer(self,nNeurons): # Fully connected layer (flattens input layer by default). Specify number of neurons in this layer.
         config = ['Dense']
-        for arg in argv:
-            config.append(arg)
+        config.append(nNeurons)
         self.Config.append(config)
         
         
-    def Activation(self,activationType):
+    def Activation(self,activationType): # Convolutional layer with square filter for dimensions 'dim'. Specify activation type and the rest will be handled.
         # E.g.: 'Sigma'
         config = ['Activation',activationType]
         self.Config.append(config)
         
-    def Maxpool(self,size,stride):
+    def Maxpool(self,size,stride): # Maxpool layer. Specify the size of the square filter and the stride to be used.
         config = ['Maxpool',size,stride]
         self.Config.append(config)
         
-    def Compose(self):
+    def Compose(self): # This function uses the self.Config array to generate the network structure in self.Structure
         pointer=0
         
         while pointer < len(self.Config):
+            
             if self.Config[pointer][0]=='Input':
-                layerStructure = ['Input']
+                
+                '''
+                Layer structure as follows (by position): 
+                    0 - 'Input' declaration of layer type
+                    1 - Output from layer (or rather what was provided as input)
+                ''' 
+                
+                layerStructure = ['Input'] # [0]
                 if len(self.Config[pointer][1:])>1:
-                    layerStructure.append(np.zeros(self.Config[pointer][1:]))
+                    layerStructure.append(np.zeros(self.Config[pointer][1:])) # Initialising input array/matrix [1]
                 else:
-                    layerStructure.append(np.zeros([self.Config[pointer][1],1]))
+                    layerStructure.append(np.zeros([self.Config[pointer][1],1])) # Initialising input array/matrix [1]
                 self.Structure.append(layerStructure)
                 inDims=[] # Dimension of input to structure
                 outDims=self.Config[pointer][1:] # Dimension of output from structure 
             
             if self.Config[pointer][0]=='Convolution':
+                
+                '''
+                Layer structure as follows (by position): 
+                    0 - 'Convolve' declaration of layer type
+                    1 - Final output from layer
+                    2 - Weights for convolutional filter
+                    3 - Bias term to be added to output from filter
+                ''' 
+                
                 inDims = outDims
-                layerStructure = ['Convolve']
-                if self.Config[pointer][3]=='Valid':
+                layerStructure = ['Convolve'] # [0]
+                if self.Config[pointer][2]=='Valid':
                     outDims[:] = [x-self.Config[pointer][1]+1 for x in outDims]
-                    layerStructure.append(np.zeros(outDims))
-                if self.Config[pointer][3]=='Same':
-                    layerStructure.append(np.zeros(outDims))
-                layerStructure.append(np.random.normal(0,1,[self.Config[pointer][1],self.Config[pointer][2]]))
+                    layerStructure.append(np.zeros(outDims)) # Initialisation of output array for Valid Padding [1]
+                if self.Config[pointer][2]=='Same':
+                    layerStructure.append(np.zeros(outDims)) # Initialisation of output array for Same Padding [1]
+                layerStructure.append(np.random.normal(0,1,[self.Config[pointer][1],self.Config[pointer][1]])) # Initialisation of weights for square filter [2]
+                layerStructure.append(np.random.normal(0,1,np.shape(layerStructure[1]))) # Initialisation of bias matrix to add to output [3]
                 self.Structure.append(layerStructure)
                 
             if self.Config[pointer][0]=='Dense':
+                '''
+                Layer structure as follows (by position): 
+                    0 - 'Dense' declaration of layer type
+                    1 - Final output from layer
+                    2 - Weight matrix
+                    3 - Bias term to be added to output 
+                ''' 
+                
                 inDims = outDims
-                layerStructure=['Dense']
+                layerStructure=['Dense'] # [0]
                 if len(outDims)>1:
                     n = 1
                     for i in range(len(outDims)):
                         n=n*outDims[i]
                 else:
                     n = outDims
-                layerStructure.append(np.zeros([self.Config[pointer][1],1]))
-                layerStructure.append(np.random.normal(0,1,[n,self.Config[pointer][1]]))
+                layerStructure.append(np.zeros([self.Config[pointer][1],1])) # Final output from layer [1]
+                layerStructure.append(np.random.normal(0,1,[n,self.Config[pointer][1]])) # Weight matrix [2]
                 outDims=[self.Config[pointer][1],1]
-                layerStructure.append(np.random.normal(0,1,outDims))
+                layerStructure.append(np.random.normal(0,1,outDims)) # Bias term [3]
                 self.Structure.append(layerStructure)
             
             if self.Config[pointer][0]=='Activation':
+                '''
+                Element structure as follows (by position): 
+                    0 - 'Activation' declaration of operation
+                    1 - Final output from element
+                    2 - Declaration of activation type, i.e.: 'Sigmoid'... (more to come)
+                ''' 
+                
                 inDims=outDims
-                layerStructure=['Activation']
-                layerStructure.append(np.zeros(outDims))
-                layerStructure.append(self.Config[pointer][1])
+                layerStructure=['Activation'] # [0]
+                layerStructure.append(np.zeros(outDims)) # Output from stage [1]
+                layerStructure.append(self.Config[pointer][1]) # Activation type [2]
                 self.Structure.append(layerStructure)
                 
             if self.Config[pointer][0]=='Maxpool':
+                '''
+                Layer structure as follows (by position): 
+                    0 - 'Maxpool' declaration of layer type
+                    1 - Final output from layer
+                    2 - Dimensions of kernel and stride to be used
+                    3 - Record of output dimensions from layer (used in backpropagation)
+                ''' 
+                
+                
                 inDims=outDims
-                outDims[:] = [math.floor(x/self.Config[pointer][1]) for x in outDims]
-                layerStructure = ['Maxpool']
-                layerStructure.append(np.zeros(outDims))
-                layerStructure.append(self.Config[pointer][1:3])
-                layerStructure.append(np.shape(layerStructure[1])) # Creates a record of the output dimensions
+                outDims[:] = [math.floor(x/self.Config[pointer][1]) for x in outDims] 
+                layerStructure = ['Maxpool'] # [0]
+                layerStructure.append(np.zeros(outDims)) # Output from layer [1]
+                layerStructure.append(self.Config[pointer][1:3]) # Dimensions of dernel and stride [2]
+                layerStructure.append(np.shape(layerStructure[1])) # Creates a record of the output dimensions [3]
                 self.Structure.append(layerStructure)
                 
-            if pointer == (len(self.Config)-1):
+            if pointer == (len(self.Config)-1): # Creates an output layer for use in backpropagation at a layer stage
                 self.Structure.append(list(self.Structure[pointer]))                
             
             pointer += 1
         
         self.Structure[pointer][0] = 'Output'
-        self.nOut = len(self.Structure[pointer][1])
+        self.nOut = len(self.Structure[pointer][1]) # records number of output neurons
         
         pointer = len(self.Structure)-1
-        while pointer >= 0:
+        while pointer >= 0: # Now, based on the feedforward structure defined within the loop above, the structure is expanded to contain structures for backpropagation 
             
             layerStructure = self.Structure[pointer]
                 
             if layerStructure[0]=='Activation':
-                layerStructure.append(np.zeros(np.shape(layerStructure[1])))
+                layerStructure.append(np.zeros(np.shape(layerStructure[1]))) # Output after backpropagating through this stage [-1]
             
             if layerStructure[0]=='Output':
-                layerStructure.append(np.zeros(np.shape(layerStructure[1])))
+                layerStructure.append(np.zeros(np.shape(layerStructure[1]))) # dErr/dOut [-1]
                 
             if layerStructure[0]=='Dense':
-                layerStructure.append(np.zeros(np.shape(layerStructure[2])))
-                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
+                layerStructure.append(np.zeros(np.shape(layerStructure[2]))) # dWeights [-2]
+                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1]))) # dActivation [-1] 
                 
             if layerStructure[0]=='Maxpool':
-                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
+                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1]))) # dMaxpool [-1]
                 
             if layerStructure[0]=='Convolve':
-                layerStructure.append(np.zeros(np.shape(self.Structure[pointer][2])))
-                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1])))
+                layerStructure.append(np.zeros(np.shape(self.Structure[pointer][2]))) # dWeights [-2]
+                layerStructure.append(np.zeros(np.shape(self.Structure[pointer-1][1]))) # dOut [-1]
                 
             self.Structure[pointer]=layerStructure
             
@@ -138,7 +181,7 @@ class LayerwiseNetwork:
 
         
 
-    def Forwardpass(self,Input):
+    def Forwardpass(self,Input): # This function defines a forward pass through the network, taking an input
         pointer = 0
         while pointer < len(self.Structure):
             if self.Structure[pointer][0]=='Input':
@@ -189,7 +232,7 @@ class LayerwiseNetwork:
         while pointer >= 0:
             
             if self.Structure[pointer][0]=='Output':
-                self.Structure[pointer][len(self.Structure[pointer])-1]=self.Structure[pointer][1]-np.reshape(Label,np.shape(self.Structure[pointer][1]))
+                self.Structure[pointer][-1]=self.Structure[pointer][1]-np.reshape(Label,np.shape(self.Structure[pointer][1]))
                 
             if self.Structure[pointer][0]=='Activation':
                 if self.Structure[pointer][2]=='Sigmoid':
@@ -269,7 +312,6 @@ class LayerwiseNetwork:
                 inputValidation = TrainingData[nTrain+k] # input for validation
                 labelValidation = Labels[:,nTrain+k] # label for validation instance
                 labelValidation = labelValidation.reshape(len(labelValidation),1)
-                maxVal=-1 # This variable is used to determine which output is predicted: maximum value in output layer corresponds to prediction (initialised at -1)
                 self.Forwardpass(inputValidation)
                 maxLabel = max(labelValidation)
                 maxOutput = max(self.Output)

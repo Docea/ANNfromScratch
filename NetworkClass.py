@@ -60,13 +60,13 @@ class Network:
         self.bestFirstWeights = []
         self.bestSecondWeights = []
         self.propCorrect = [] # proportion Correct during validation
-        nTrain=math.floor(len(TrainingData[:][1])*(1-ValidationProp))
-        nValidation=len(TrainingData[:][1])-nTrain
+        nTrain=math.floor(len(TrainingData)*(1-ValidationProp))
+        nValidation=len(TrainingData)-nTrain
         for i in range(Iterations):
             print(i)
             nCorrect=0 # Counter for number of correct classifications
             for j in range(nTrain):
-                inputTrain=TrainingData[:,j]
+                inputTrain=TrainingData[j]
                 inputTrain=inputTrain.reshape(len(inputTrain),1)
                 labelTrain = Labels[:,j]
                 labelTrain=labelTrain.reshape(len(labelTrain),1)
@@ -74,7 +74,7 @@ class Network:
                 self.ComputeError(labelTrain)
                 self.Backprop(labelTrain)
             for k in range(nValidation):
-                inputValidation = TrainingData[:,nTrain+k] # input for validation
+                inputValidation = TrainingData[nTrain+k] # input for validation
                 inputValidation = inputValidation.reshape(len(inputValidation),1)
                 labelValidation = Labels[:,nTrain+k] # label for validation instance
                 labelValidation = labelValidation.reshape(len(labelValidation),1)

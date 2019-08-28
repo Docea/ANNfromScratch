@@ -20,11 +20,14 @@ trainLabels = net.VectoriseLabels(trainData[:,0]) # Assigns each label a separat
 trainData = trainData[:,1:] # Separates training data from labels
 trainData = (trainData/255)-0.5 # Mean-normalising data and rescaling data
 trainData = np.transpose(trainData)
+trainData = np.reshape(trainData,[784,42000])
+trainData = list(np.transpose(trainData))
+trainData = trainData[0:42000]
 testData = pd.read_csv('test.csv',',') # Importing test data, although *CURRENTLY UNUSED*
 testData = testData.values
 testData = np.transpose(testData)
 
-inputSize = len(trainData[:,1]) # Determines the size of the input layer to the neural network
+inputSize = len(trainData[1]) # Determines the size of the input layer to the neural network
 hiddenSize = 27 # Sets the size of the hidden layer (hidden layer size << input layer size)
 outputSize = len(trainLabels) # Sets output layer size in accordance with number of labers
 learningRate = 0.1 # Sets learning rate
