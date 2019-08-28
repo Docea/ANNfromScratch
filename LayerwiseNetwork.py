@@ -251,9 +251,8 @@ class LayerwiseNetwork:
         self.propCorrect = [] # proportion Correct during validation
         nTrain=math.floor(len(TrainingData)*(1-ValidationProp))
         nValidation=len(TrainingData)-nTrain
-        
+        self.totalErr = np.zeros([Iterations,1])
         for i in range(Iterations):
-            
             nCorrect=0 # Counter for number of correct classifications
             for j in range(nTrain):
                 print("Iteration: ", i, "Instance: ", j)
@@ -261,8 +260,8 @@ class LayerwiseNetwork:
                 labelTrain = Labels[:,j]
                 labelTrain=labelTrain.reshape(len(labelTrain),1)
                 self.Forwardpass(inputTrain)
-                self.ComputeError(labelTrain)
                 self.GetOutput()
+                self.ComputeError(labelTrain)
                 self.Backpropagate(self.Output,labelTrain)
                 self.Update()
             for k in range(nValidation):
@@ -272,19 +271,19 @@ class LayerwiseNetwork:
                 labelValidation = labelValidation.reshape(len(labelValidation),1)
                 maxVal=-1 # This variable is used to determine which output is predicted: maximum value in output layer corresponds to prediction (initialised at -1)
                 self.Forwardpass(inputValidation)
+                maxLabel = max(labelValidation)
+                maxOutput = max(self.Output)
                 for l in range(self.nOut):
-                    if self.Output[l]>maxVal:
-                        maxVal = self.Output[l]
+                    if self.Output[l]==maxOutput:
                         maxPos = l # position of max value in output
-                    if labelValidation[l]==1:
+                    if labelValidation[l]==maxLabel:
                         corrPos = l # correct output position
                 if maxPos==corrPos:
-                    nCorrect=nCorrect+1
+                    nCorrect += 1
+                self.ComputeError(labelValidation)
+                self.totalErr[i] += self.Error
             self.propCorrect.append(nCorrect/nValidation)
             #if max(self.propCorrect) == nCorrect/nValidation:
-                
-        
-        
         
 def VectoriseLabels(Labels):
     # This function takes a set of labels, where each label is a single number 
