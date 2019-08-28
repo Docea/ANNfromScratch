@@ -37,12 +37,15 @@ trainData = (trainData/255)-0.5 # Mean-normalising data and rescaling data
 trainData = np.transpose(trainData)
 trainData = np.reshape(trainData,[28,28,42000])
 trainData = list(np.transpose(trainData))
+trainData = trainData[0:1000]
 testData = pd.read_csv('test.csv',',') # Importing test data, although *CURRENTLY UNUSED*
 testData = testData.values
 testData = np.transpose(testData)
 
+trainData = np.random.rand(6,28,28)
+trainData = list(trainData)
 
-Net.Train(trainData,trainLabels,0.2,10,0.01)
+Net.Train(trainData,trainLabels,0.2,1000,0.1)
 
 
 '''

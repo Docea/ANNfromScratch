@@ -218,16 +218,17 @@ class LayerwiseNetwork:
                 nCols=len(self.Structure[pointer-1][1][1][:])
                 filterSize=len(self.Structure[pointer][2])
                 
+                self.Structure[pointer][-1] = np.zeros(np.shape(self.Structure[pointer][-1]))
+                self.Structure[pointer][-2] = np.zeros(np.shape(self.Structure[pointer][-2]))
+                
                 for i in range(nRows-filterSize+1): # Change this for variable stride
-                    for j in range(nCols-filterSize+1): # Change this for variable stride
+                    for j in range(nCols-filterSize+1): # Change this for variable stride        
                         self.Structure[pointer][-1][i:i+filterSize,j:j+filterSize] += self.Structure[pointer+1][-1][i,j]*self.Structure[pointer][2] # This calculates the derivative with respect to the input to the layer
                         self.Structure[pointer][-2] += self.Structure[pointer-1][-1][i:i+filterSize,j:j+filterSize]*self.Structure[pointer+1][-1][i,j] # Calculates derivative with respect to filter weights
 
                         
             pointer -= 1
-            
-        self.Update() # Updates weights following calculation of derivatives
-            
+                        
         ##### Before: add biases to Compose() and Forwardpass()
         ##### Add extra place at end of each piece in self.Structure for a placeholder for backpropagation
         
@@ -263,8 +264,9 @@ class LayerwiseNetwork:
                 self.ComputeError(labelTrain)
                 self.GetOutput()
                 self.Backpropagate(self.Output,labelTrain)
+                self.Update()
             for k in range(nValidation):
-                print("Iteration: ", i, "Instance: ", k)
+                print("Iteration: ", i, "Instance: ", nTrain+k)
                 inputValidation = TrainingData[nTrain+k] # input for validation
                 labelValidation = Labels[:,nTrain+k] # label for validation instance
                 labelValidation = labelValidation.reshape(len(labelValidation),1)
