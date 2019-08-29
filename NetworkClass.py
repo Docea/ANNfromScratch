@@ -49,7 +49,7 @@ class Network:
             dHidden_dNet1=self.Hidden*(1-self.Hidden)
         dNet1_dW1=self.Input
         
-        self.Weight1Gradients=np.dot(np.multiply(np.transpose(np.dot(np.transpose(np.multiply(dErr_dOut,dOut_dNet2)),self.SecondWeights)),self.Hidden),np.transpose(self.Input))
+        self.Weight1Gradients=np.dot(np.multiply(np.transpose(np.dot(np.transpose(np.multiply(dErr_dOut,dOut_dNet2)),self.SecondWeights)),dHidden_dNet1),np.transpose(self.Input))
         self.Update()
         
     def Update(self):
