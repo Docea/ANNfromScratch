@@ -157,7 +157,7 @@ class LayerwiseNetwork:
             layerStructure = self.Structure[pointer]
                 
             if layerStructure[0]=='Activation':
-                layerStructure.append(np.zeros(np.shape(layerStructure[1]))) # Output after backpropagating through this stage [-1]
+                layerStructure.append(np.zeros(np.shape(layerStructure[1]))) # dNet [-1]
             
             if layerStructure[0]=='Output':
                 layerStructure.append(np.zeros(np.shape(layerStructure[1]))) # dErr/dOut [-1]
@@ -185,21 +185,29 @@ class LayerwiseNetwork:
         pointer = 0
         while pointer < len(self.Structure):
             if self.Structure[pointer][0]=='Input':
-                self.Structure[pointer][1]=Input
+                self.Structure[pointer][1]=Input # 'Output' of the input layer is the input to the forwardpass function
             
             if self.Structure[pointer][0]=='Convolve':
-                nRows=len(self.Structure[pointer-1][1][:])
-                nCols=len(self.Structure[pointer-1][1][1][:])
-                filterSize=len(self.Structure[pointer][2])
+                nRows=len(self.Structure[pointer-1][1][:]) # number of rows of matrix inputted to layer
+                nCols=len(self.Structure[pointer-1][1][1][:]) # number of cols of matrix inputted to layer
+                filterSize=len(self.Structure[pointer][2]) # side-length of filter kernel to be used
                 
-                for i in range(nRows-filterSize+1):
-                    for j in range(nCols-filterSize+1):
+                # ! AT THE MOMENT, CONVOLUTIONAL LAYERS ASSUME STRIDE LENGTH OF 1 !
+                
+                # Iterating over input
+                for i in range(nRows-filterSize+1): 
+                    for j in range(nCols-filterSize+1): 
                         self.Structure[pointer][1][i,j]=np.sum(np.multiply(self.Structure[pointer][2],self.Structure[pointer-1][1][i:i+filterSize,j:j+filterSize]))
+                    #           ^Output                                             ^Kernel Weights                  ^Section of Input from previous layer
+                
+                self.Structure[pointer][1] += self.Structure[pointer][3] # Addition of bias to output
             
             if self.Structure[pointer][0]=='Maxpool':
-                nRows=len(self.Structure[pointer-1][1][:])
-                nCols=len(self.Structure[pointer-1][1][1][:])
-                filterSize=self.Structure[pointer][2][0]
+                nRows=len(self.Structure[pointer][1][:]) # number of rows of matrix output from layer
+                nCols=len(self.Structure[pointer][1][1][:]) # number of cols of matrix output from layer
+                filterSize=self.Structure[pointer][2][0] # side-length of kernel window for maxpool
+                
+                # ! AT THE MOMENT, MAXPOOL LAYERS ASSUME STRIDE LENGTH EQUAL TO THE SQUARE KERNEL SIZE !
                 
                 for i in range(math.floor(nRows/filterSize)):
                     for j in range(math.floor(nCols/filterSize)):
@@ -210,21 +218,23 @@ class LayerwiseNetwork:
                     self.Structure[pointer][1]=1/(1+np.exp(-self.Structure[pointer-1][1]))
                     
             if self.Structure[pointer][0]=='Dense':
-                shape = len(np.shape(self.Structure[pointer-1][1]))
-                if shape>1: #Check if flat
-                    self.Structure[pointer-1][1]=np.ndarray.flatten(self.Structure[pointer-1][1])
-                self.Structure[pointer][1]=np.reshape(np.dot(np.transpose(self.Structure[pointer][2]),self.Structure[pointer-1][1]), np.shape(self.Structure[pointer][1])) + self.Structure[pointer][3] # Multiply input to hidden layer by weights
-                    
+                tempArray = self.Structure[pointer-1][1]
+                shape = len(np.shape(tempArray))
+                if shape>1: #Check if flat, and if not, flatten
+                    tempArray = np.ndarray.flatten(tempArray) 
+                self.Structure[pointer][1]=np.reshape(np.dot(np.transpose(self.Structure[pointer][2]),tempArray), np.shape(self.Structure[pointer][1])) # Multiply input to hidden layer by weights
+                self.Structure[pointer][1] += self.Structure[pointer][3] # Adding bias to output
+                
             if self.Structure[pointer][0]=='Output':
                 self.Structure[pointer][1]=self.Structure[pointer-1][1]
             pointer += 1
             
     def ComputeError(self,Label):
-        self.Output = self.Structure[len(self.Structure)-1][1]
+        self.Output = self.Structure[-1][1]
         self.Error=np.sum((self.Output-Label)**2)
         
     def GetOutput(self):
-        self.Output = self.Structure[len(self.Structure)-1][1]
+        self.Output = self.Structure[-1][1]
         return self.Output
         
     def Backpropagate(self,Output,Label):
@@ -237,11 +247,16 @@ class LayerwiseNetwork:
             if self.Structure[pointer][0]=='Activation':
                 if self.Structure[pointer][2]=='Sigmoid':
                     # Calculate Schar Product between next layer's output and activation derivative
-                    self.Structure[pointer][len(self.Structure[pointer])-1]=np.multiply(Recast(np.multiply(self.Structure[pointer][1],(1-self.Structure[pointer][1]))),self.Structure[pointer+1][len(self.Structure[pointer+1])-1])
+                    self.Structure[pointer][-1]=np.multiply(self.Structure[pointer][1],(1-self.Structure[pointer][1])) # dNet_dOut = Output(1-Output) ; where the output is the output from the activation function
+                
+                if len(np.shape(self.Structure[pointer][-1]))==1: # Removes errors introduced by 1-D array
+                    self.Structure[pointer][-1] = Recast(self.Structure[pointer][-1])
+                self.Structure[pointer][-1]=np.multiply(self.Structure[pointer][-1],self.Structure[pointer+1][-1]) # Aggregates backpropagated derivatives
                     
             if self.Structure[pointer][0]=='Dense':
-                self.Structure[pointer][-2]=np.dot(Recast(self.Structure[pointer-1][1]),np.transpose(self.Structure[pointer+1][-1])) # Calculates the derivatives for the weights 
-                self.Structure[pointer][-1]=np.dot(self.Structure[pointer][2],self.Structure[pointer+1][-1])
+                tempArray = Recast(np.ndarray.flatten(self.Structure[pointer-1][1])) # Accounts for a non-flat output in previous layer
+                self.Structure[pointer][-2]=np.dot(tempArray,np.transpose(self.Structure[pointer+1][-1])) # Calculates the derivatives for the weights 
+                self.Structure[pointer][-1]=np.reshape(np.dot(self.Structure[pointer][2],self.Structure[pointer+1][-1]),np.shape(self.Structure[pointer][-1]))
                 
             if self.Structure[pointer][0]=='Maxpool':
                 nRows=len(self.Structure[pointer-1][1][:])
@@ -271,9 +286,6 @@ class LayerwiseNetwork:
 
                         
             pointer -= 1
-                        
-        ##### Before: add biases to Compose() and Forwardpass()
-        ##### Add extra place at end of each piece in self.Structure for a placeholder for backpropagation
         
         
     def Update(self):  
@@ -289,50 +301,82 @@ class LayerwiseNetwork:
             pointer += 1
             
             
-    def Train(self,TrainingData,Labels,ValidationProp,Iterations,learningRate):
+    def Train(self,TrainingData,Labels,ValidationProp,Iterations,learningRate,validationFrequency):
         self.learningRate=learningRate
-        self.propCorrect = [] # proportion Correct during validation
+        self.validCorrect = [] # proportion Correct during validation
+        self.trainCorrect = []
         nTrain=math.floor(len(TrainingData)*(1-ValidationProp))
         nValidation=len(TrainingData)-nTrain
-        self.totalErr = np.zeros([Iterations,1])
+        self.validErr = []
+        self.trainErr = []
+        validErr = 0
+        trainErr = 0
+        
+        batchSize = validationFrequency
+        splits = 0
+        
         for i in range(Iterations):
-            nCorrect=0 # Counter for number of correct classifications
+            nCorrect = 0 # Counter for number of correct classifications
+            splits = 0
             for j in range(nTrain):
                 print("Iteration: ", i, "Instance: ", j)
                 inputTrain=TrainingData[j]
-                labelTrain = Labels[:,j]
+                labelTrain = Labels[j]
                 labelTrain=labelTrain.reshape(len(labelTrain),1)
                 self.Forwardpass(inputTrain)
                 self.GetOutput()
                 self.ComputeError(labelTrain)
                 self.Backpropagate(self.Output,labelTrain)
                 self.Update()
-            for k in range(nValidation):
-                print("Iteration: ", i, "Instance: ", nTrain+k)
-                inputValidation = TrainingData[nTrain+k] # input for validation
-                labelValidation = Labels[:,nTrain+k] # label for validation instance
-                labelValidation = labelValidation.reshape(len(labelValidation),1)
-                self.Forwardpass(inputValidation)
-                maxLabel = max(labelValidation)
+                
+                maxLabel = max(labelTrain)
                 maxOutput = max(self.Output)
                 for l in range(self.nOut):
                     if self.Output[l]==maxOutput:
                         maxPos = l # position of max value in output
-                    if labelValidation[l]==maxLabel:
+                    if labelTrain[l]==maxLabel:
                         corrPos = l # correct output position
                 if maxPos==corrPos:
                     nCorrect += 1
-                self.ComputeError(labelValidation)
-                self.totalErr[i] += self.Error
-            self.propCorrect.append(nCorrect/nValidation)
-            #if max(self.propCorrect) == nCorrect/nValidation:
-        
+                self.ComputeError(labelTrain)
+                trainErr += self.Error
+            
+            
+                if math.floor(j/batchSize) > splits :
+                    splits += 1
+                    self.trainErr.append(trainErr)
+                    trainErr = 0
+                    self.trainCorrect.append(nCorrect/batchSize)
+                    nCorrect = 0
+                    for k in range(nValidation):
+                        print("Iteration: ", i, "Instance: ", nTrain+k)
+                        inputValidation = TrainingData[nTrain+k] # input for validation
+                        labelValidation = Labels[nTrain+k] # label for validation instance
+                        labelValidation = labelValidation.reshape(len(labelValidation),1)
+                        self.Forwardpass(inputValidation)
+                        self.GetOutput()
+                        maxLabel = max(labelValidation)
+                        maxOutput = max(self.Output)
+                        for l in range(self.nOut):
+                            if self.Output[l]==maxOutput:
+                                maxPos = l # position of max value in output
+                            if labelValidation[l]==maxLabel:
+                                corrPos = l # correct output position
+                        if maxPos==corrPos:
+                            nCorrect += 1
+                        self.ComputeError(labelValidation)
+                        validErr += self.Error
+                    self.validCorrect.append(nCorrect/nValidation)
+                    self.validErr.append(validErr)
+                    validErr = 0
+                    nCorrect = 0
+            
 def VectoriseLabels(Labels):
     # This function takes a set of labels, where each label is a single number 
     # (encoding position) and returns them in vector format
     
     nLabels = len(Labels)
-    nCategories = max(Labels)
+    nCategories = max(Labels+1)
     newLabels = np.zeros([nCategories,nLabels])
     Labels=Labels-1
     newLabels[Labels,range(nLabels)]=1
