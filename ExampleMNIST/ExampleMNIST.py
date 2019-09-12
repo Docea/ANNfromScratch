@@ -21,9 +21,7 @@ Net = layerNet.LayerwiseNetwork()
 Net.InputLayer(28,28)
 #Net.ConvolutionLayer(6,'Valid')       # Uncomment to include layer
 #Net.ConvolutionLayer(4,'Valid')       # Uncomment to include layer
-#Net.Maxpool(2,2)                      # Uncomment to include layer
-Net.DenseLayer(30)
-Net.Activation('Sigmoid')
+Net.Maxpool(2,2)                      # Uncomment to include layer
 Net.DenseLayer(20)
 Net.Activation('Sigmoid')
 Net.DenseLayer(10)

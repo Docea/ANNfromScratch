@@ -209,10 +209,10 @@ class LayerwiseNetwork:
                 
                 # ! AT THE MOMENT, MAXPOOL LAYERS ASSUME STRIDE LENGTH EQUAL TO THE SQUARE KERNEL SIZE !
                 
-                for i in range(math.floor(nRows/filterSize)):
-                    for j in range(math.floor(nCols/filterSize)):
-                        self.Structure[pointer][1][i,j]=np.max(self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize])
-            
+                for i in range(nRows):
+                    for j in range(nCols):
+                        self.Structure[pointer][1][i,j]=np.amax(self.Structure[pointer-1][1][i*filterSize:i*filterSize+filterSize,j*filterSize:j*filterSize+filterSize])
+                            
             if self.Structure[pointer][0]=='Activation':
                 if self.Structure[pointer][2]=='Sigmoid':
                     self.Structure[pointer][1]=1/(1+np.exp(-self.Structure[pointer-1][1]))
